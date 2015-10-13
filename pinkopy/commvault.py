@@ -23,6 +23,7 @@ class CommvaultSession(object):
         self.clients = None
         self.clients_last_updated = None
         self.client_jobs = {}
+        self.client_properties = {}
         self.subclient_jobs = {}
         self.job_details = None
         self.job_vmstatus = None
@@ -120,11 +121,28 @@ class CommvaultSession(object):
         """
         path = 'Client/{}'.format(client_id)
         res = self.request('GET', path)
-        # turn wrong xml into json
-        data = xmltodict.parse(res.text)
-        return data['App_GetClientPropertiesResponse']['clientProperties']
-        # temporarily returning res to see when fix is applied
-        # return res
+
+        def get_from_source(**kwargs):
+            log.info('Getting client properties from source')
+            path = 'Client/{}'.format(client_id)
+            res = self.request('GET', path)
+            # If you are using a version < SP12 this call will respond in
+            # xml even though we are requesting json.
+            if not res.json():
+                # turn wrong xml into json
+                data = xmltodict.parse(res.text)
+            else:
+                data = res.json()
+            self.client_properties[client_id] = {}
+            self.client_properties[client_id]['properties'] = data['App_GetClientPropertiesResponse']['clientProperties']
+
+        if client_id not in self.client_properties:
+            get_from_source(**locals())
+        else:
+            # We already have a good dataset. Return it.
+            log.info('Using cached client jobs')
+
+        return self.client_properties[client_id]['properties']
 
     def get_jobs(self, client_id, job_filter=None, last=None):
         """
