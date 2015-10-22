@@ -24,6 +24,7 @@ class CommvaultSession(object):
         self.clients_last_updated = None
         self.client_jobs = {}
         self.client_properties = {}
+        self.subclients = {}
         self.subclient_jobs = {}
         self.job_details = None
         self.job_vmstatus = None
@@ -143,6 +144,28 @@ class CommvaultSession(object):
             log.info('Using cached client jobs')
 
         return self.client_properties[client_id]['properties']
+
+    def get_subclients(self, client_id):
+        """Get list of subclients for given client."""
+        def get_from_source(**kwargs):
+            log.info('Getting subclients list from source for client {}'
+                     .format(client_id))
+            path = 'Subclient'
+            qstr_vals = {
+                'clientId': client_id
+            }
+            res = self.request('GET', path, qstr_vals=qstr_vals)
+            data = res.json()
+            return data['App_GetSubClientPropertiesResponse']['subClientProperties']
+
+        if client_id not in self.subclients:
+            self.subclients[client_id] = {}
+            self.subclients[client_id]['last_updated'] = datetime.now()
+            self.subclients[client_id]['subclients'] = get_from_source(**locals())
+        elif datetime.now() > self.subclients[client_id]['last_updated'] + timedelta(hours=1):
+            pass
+
+        return self.subclients[client_id]['subclients']
 
     def get_jobs(self, client_id, job_filter=None, last=None):
         """
