@@ -9,6 +9,9 @@ python:
 install:
   - pip install .
 
+script:
+  - touch tmp
+
 deploy:
   provider: pypi
   user: theherk
