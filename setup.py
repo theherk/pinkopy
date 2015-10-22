@@ -10,7 +10,7 @@ with open('README.md') as f:
 install_requires = [
     'requests>=2.7.0',
     'xmltodict>=0.9.2',
-    ]
+]
 
 setup(
     name='pinkopy',
