@@ -99,11 +99,10 @@ class CommvaultSession(object):
             self.clients_last_updated = datetime.now()
             return data['App_GetClientPropertiesResponse']['clientProperties']
 
-        if not self.clients:
+        # Update this list at least once per hour.
+        if (not self.clients
+            or datetime.now() > self.clients_last_updated + timedelta(hours=1)):
             self.clients = get_from_source(**locals())
-        elif datetime.now() > self.clients_last_updated + timedelta(hours=1):
-            pass
-
         return self.clients
 
     def get_client(self, client_id):
@@ -153,13 +152,11 @@ class CommvaultSession(object):
             data = res.json()
             return data['App_GetSubClientPropertiesResponse']['subClientProperties']
 
-        if client_id not in self.subclients:
+        if (client_id not in self.subclients
+            or datetime.now() > self.subclients[client_id]['last_updated'] + timedelta(hours=1)):
             self.subclients[client_id] = {}
             self.subclients[client_id]['last_updated'] = datetime.now()
             self.subclients[client_id]['subclients'] = get_from_source(**locals())
-        elif datetime.now() > self.subclients[client_id]['last_updated'] + timedelta(hours=1):
-            pass
-
         return self.subclients[client_id]['subclients']
 
     def get_jobs(self, client_id, job_filter=None, last=None):
