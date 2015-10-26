@@ -24,7 +24,7 @@ class CommvaultSession(object):
         self.client_jobs = {}
         self.client_properties = {}
         self.subclients = {}
-        self.subclient_jobs = {}
+        self.subclient_jobs = {'id': {}, 'name': {}}
         self.job_details = None
         self.job_vmstatus = None
         self.get_token()
@@ -199,27 +199,62 @@ class CommvaultSession(object):
             Since we do not yet have a matching dataset, we must go to
             the source.
             """
-            """
-            log.info('Getting subclient jobs from source')
-            self.subclient_jobs[cust_num] = {}
-            self.subclient_jobs[cust_num]['last'] = last
-            self.subclient_jobs[cust_num]['jobs'] = sorted(
+            log.info('Getting subclient jobs from source using id {}'
+                     .format(subclient_id))
+            self.subclient_jobs['id'][subclient_id] = {}
+            self.subclient_jobs['id'][subclient_id]['last'] = last
+            self.subclient_jobs['id'][subclient_id]['jobs'] = sorted(
                 [
                     job for job in jobs
-                    if job['jobSummary']['subclient']['@subclientName'].split(' - ')[0] == cust_num
+                    if job['jobSummary']['subclient']['@subclientId'] == subclient_id
                 ],
                 key=lambda job: job['jobSummary']['@jobStartTime'],
                 reverse=True
             )[:last]
 
-        if cust_num not in self.subclient_jobs:
+        if subclient_id not in self.subclient_jobs['id']:
             get_from_source(**locals())
-        elif self.subclient_jobs[cust_num]['last'] != last:
+        elif self.subclient_jobs['id'][subclient_id]['last'] != last:
             get_from_source(**locals())
         else:
             # We already have a good dataset. Return it.
             log.info('Using cached subclient jobs')
-        return self.subclient_jobs[cust_num]['jobs']
+        return self.subclient_jobs['id'][subclient_id]['jobs']
+
+    def get_subclient_jobs_by_name(self, jobs, subclient_name, last=None):
+        """Get list of jobs relevant to a specific subclient.
+
+        Given a list of jobs and subclient name match subclient jobs.
+        This makes the significant assumption that the subclient name
+        will be contained in @subclientName.
+        """
+        def get_from_source(**kwargs):
+            """Retrieve new data.
+
+            Since we do not yet have a matching dataset, we must go to
+            the source.
+            """
+            log.info('Getting subclient jobs from source using name {}'
+                     .format(subclient_name))
+            self.subclient_jobs['name'][subclient_name] = {}
+            self.subclient_jobs['name'][subclient_name]['last'] = last
+            self.subclient_jobs['name'][subclient_name]['jobs'] = sorted(
+                [
+                    job for job in jobs
+                    if subclient_name in job['jobSummary']['subclient']['@subclientName']
+                ],
+                key=lambda job: job['jobSummary']['@jobStartTime'],
+                reverse=True
+            )[:last]
+
+        if subclient_name not in self.subclient_jobs['name']:
+            get_from_source(**locals())
+        elif self.subclient_jobs['name'][subclient_name]['last'] != last:
+            get_from_source(**locals())
+        else:
+            # We already have a good dataset. Return it.
+            log.info('Using cached subclient jobs')
+        return self.subclient_jobs['name'][subclient_name]['jobs']
 
     def get_job_details(self, client_id, job_id):
         """Get details about a given job."""
