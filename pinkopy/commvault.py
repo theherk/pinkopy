@@ -106,10 +106,15 @@ class CommvaultSession(object):
 
         return self.clients
 
-    def get_client_properties(self, client_id):
-        """
-        Get list of clients from Commvault
+    def get_client(self, client_id):
+        """Get info for one client from clients."""
+        if not self.clients:
+            self.get_clients()
+        return list(filter(lambda x: x['clientId'] == client_id, self.clients))[0]
 
+    def get_client_properties(self, client_id):
+        """Get list of clients from Commvault.
+ 
         This call replies in XML, because who cares about Accept headers right.
         So, we must take the reply in XML and convert it to JSON to maintain sanity.
         """
