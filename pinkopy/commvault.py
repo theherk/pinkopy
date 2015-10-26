@@ -118,9 +118,6 @@ class CommvaultSession(object):
         This call replies in XML, because who cares about Accept headers right.
         So, we must take the reply in XML and convert it to JSON to maintain sanity.
         """
-        path = 'Client/{}'.format(client_id)
-        res = self.request('GET', path)
-
         def get_from_source(**kwargs):
             log.info('Getting client properties from source')
             path = 'Client/{}'.format(client_id)
