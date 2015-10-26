@@ -19,7 +19,6 @@ class CommvaultSession(object):
             'Accept': 'application/json',
             'Content-type': 'application/json'
         }
-
         self.clients = None
         self.clients_last_updated = None
         self.client_jobs = {}
@@ -39,9 +38,7 @@ class CommvaultSession(object):
 
     def request(self, method, path, qstr_vals=None, service=None,
                 headers=None, payload=None, **kwargs):
-        """
-        Make a request to Commvault
-        """
+        """Make a request to Commvault."""
         service = service if service else self.service
         headers = headers if headers else self.headers
         try:
@@ -73,9 +70,7 @@ class CommvaultSession(object):
             log.error(e)
 
     def get_token(self):
-        """
-        Login to Commvault and get token
-        """
+        """Login to Commvault and get token."""
         path = 'Login'
         headers = self.headers
         payload = {
@@ -95,9 +90,7 @@ class CommvaultSession(object):
             raise ValueError('Commvault user or pass incorrect')
 
     def get_clients(self):
-        """
-        Get list of clients from Commvault
-        """
+        """Get list of clients from Commvault."""
         def get_from_source(**kwargs):
             log.info('Getting client list from source')
             path = 'Client'
@@ -168,9 +161,7 @@ class CommvaultSession(object):
         return self.subclients[client_id]['subclients']
 
     def get_jobs(self, client_id, job_filter=None, last=None):
-        """
-        Get list of jobs for a given client and filter
-        """
+        """Get list of jobs for a given client and filter."""
         def get_from_source(**kwargs):
             log.info('Getting client jobs from source')
             path = 'Job'
@@ -198,18 +189,16 @@ class CommvaultSession(object):
         else:
             # We already have a good dataset. Return it.
             log.info('Using cached client jobs')
-
         return self.client_jobs[client_id]['jobs']
 
-    def get_subclient_jobs(self, jobs, cust_num, last=None):
-        """
-        Get list of jobs relevant to a specific subclient
-        given a list of jobs and Cherwell customer number
-        """
+    def get_subclient_jobs(self, jobs, subclient_id, last=None):
+        """Get list of jobs relevant to a specific subclient."""
         def get_from_source(**kwargs):
+            """Retrieve new data.
+
+            Since we do not yet have a matching dataset, we must go to
+            the source.
             """
-            Retrieve new data since we do not yet
-            have a matching dataset.
             """
             log.info('Getting subclient jobs from source')
             self.subclient_jobs[cust_num] = {}
@@ -233,9 +222,7 @@ class CommvaultSession(object):
         return self.subclient_jobs[cust_num]['jobs']
 
     def get_job_details(self, client_id, job_id):
-        """
-        Get details about a given job
-        """
+        """Get details about a given job."""
         path = 'JobDetails'
         payload = {
             'JobManager_JobDetailRequest': {
@@ -249,9 +236,7 @@ class CommvaultSession(object):
         return self.job_details
 
     def get_job_vmstatus(self, job_details):
-        """
-        Get all vmStatus entries for a given job
-        """
+        """Get all vmStatus entries for a given job."""
         try:
             vms = job_details['clientStatusInfo']['vmStatus']
         except TypeError as e:
@@ -268,9 +253,7 @@ class CommvaultSession(object):
         return self.job_vmstatus
 
     def logout(self):
-        """
-        End session
-        """
+        """End session."""
         path = 'Logout'
         res = self.request('POST', path)
         self.headers['Authtoken'] = None
