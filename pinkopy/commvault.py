@@ -19,13 +19,12 @@ class CommvaultSession(object):
             'Accept': 'application/json',
             'Content-type': 'application/json'
         }
-
         self.clients = None
         self.clients_last_updated = None
         self.client_jobs = {}
         self.client_properties = {}
         self.subclients = {}
-        self.subclient_jobs = {}
+        self.subclient_jobs = {'id': {}, 'name': {}}
         self.job_details = None
         self.job_vmstatus = None
         self.get_token()
@@ -39,9 +38,7 @@ class CommvaultSession(object):
 
     def request(self, method, path, qstr_vals=None, service=None,
                 headers=None, payload=None, **kwargs):
-        """
-        Make a request to Commvault
-        """
+        """Make a request to Commvault."""
         service = service if service else self.service
         headers = headers if headers else self.headers
         try:
@@ -73,9 +70,7 @@ class CommvaultSession(object):
             log.error(e)
 
     def get_token(self):
-        """
-        Login to Commvault and get token
-        """
+        """Login to Commvault and get token."""
         path = 'Login'
         headers = self.headers
         payload = {
@@ -95,9 +90,7 @@ class CommvaultSession(object):
             raise ValueError('Commvault user or pass incorrect')
 
     def get_clients(self):
-        """
-        Get list of clients from Commvault
-        """
+        """Get list of clients from Commvault."""
         def get_from_source(**kwargs):
             log.info('Getting client list from source')
             path = 'Client'
@@ -106,23 +99,24 @@ class CommvaultSession(object):
             self.clients_last_updated = datetime.now()
             return data['App_GetClientPropertiesResponse']['clientProperties']
 
-        if not self.clients:
+        # Update this list at least once per hour.
+        if (not self.clients
+            or datetime.now() > self.clients_last_updated + timedelta(hours=1)):
             self.clients = get_from_source(**locals())
-        elif datetime.now() > self.clients_last_updated + timedelta(hours=1):
-            pass
-
         return self.clients
 
-    def get_client_properties(self, client_id):
-        """
-        Get list of clients from Commvault
+    def get_client(self, client_id):
+        """Get info for one client from clients."""
+        if not self.clients:
+            self.get_clients()
+        return list(filter(lambda x: x['clientId'] == client_id, self.clients))[0]
 
+    def get_client_properties(self, client_id):
+        """Get list of clients from Commvault.
+ 
         This call replies in XML, because who cares about Accept headers right.
         So, we must take the reply in XML and convert it to JSON to maintain sanity.
         """
-        path = 'Client/{}'.format(client_id)
-        res = self.request('GET', path)
-
         def get_from_source(**kwargs):
             log.info('Getting client properties from source')
             path = 'Client/{}'.format(client_id)
@@ -158,19 +152,15 @@ class CommvaultSession(object):
             data = res.json()
             return data['App_GetSubClientPropertiesResponse']['subClientProperties']
 
-        if client_id not in self.subclients:
+        if (client_id not in self.subclients
+            or datetime.now() > self.subclients[client_id]['last_updated'] + timedelta(hours=1)):
             self.subclients[client_id] = {}
             self.subclients[client_id]['last_updated'] = datetime.now()
             self.subclients[client_id]['subclients'] = get_from_source(**locals())
-        elif datetime.now() > self.subclients[client_id]['last_updated'] + timedelta(hours=1):
-            pass
-
         return self.subclients[client_id]['subclients']
 
     def get_jobs(self, client_id, job_filter=None, last=None):
-        """
-        Get list of jobs for a given client and filter
-        """
+        """Get list of jobs for a given client and filter."""
         def get_from_source(**kwargs):
             log.info('Getting client jobs from source')
             path = 'Job'
@@ -198,44 +188,75 @@ class CommvaultSession(object):
         else:
             # We already have a good dataset. Return it.
             log.info('Using cached client jobs')
-
         return self.client_jobs[client_id]['jobs']
 
-    def get_subclient_jobs(self, jobs, cust_num, last=None):
-        """
-        Get list of jobs relevant to a specific subclient
-        given a list of jobs and Cherwell customer number
-        """
+    def get_subclient_jobs(self, jobs, subclient_id, last=None):
+        """Get list of jobs relevant to a specific subclient."""
         def get_from_source(**kwargs):
+            """Retrieve new data.
+
+            Since we do not yet have a matching dataset, we must go to
+            the source.
             """
-            Retrieve new data since we do not yet
-            have a matching dataset.
-            """
-            log.info('Getting subclient jobs from source')
-            self.subclient_jobs[cust_num] = {}
-            self.subclient_jobs[cust_num]['last'] = last
-            self.subclient_jobs[cust_num]['jobs'] = sorted(
+            log.info('Getting subclient jobs from source using id {}'
+                     .format(subclient_id))
+            self.subclient_jobs['id'][subclient_id] = {}
+            self.subclient_jobs['id'][subclient_id]['last'] = last
+            self.subclient_jobs['id'][subclient_id]['jobs'] = sorted(
                 [
                     job for job in jobs
-                    if job['jobSummary']['subclient']['@subclientName'].split(' - ')[0] == cust_num
+                    if job['jobSummary']['subclient']['@subclientId'] == subclient_id
                 ],
                 key=lambda job: job['jobSummary']['@jobStartTime'],
                 reverse=True
             )[:last]
 
-        if cust_num not in self.subclient_jobs:
+        if subclient_id not in self.subclient_jobs['id']:
             get_from_source(**locals())
-        elif self.subclient_jobs[cust_num]['last'] != last:
+        elif self.subclient_jobs['id'][subclient_id]['last'] != last:
             get_from_source(**locals())
         else:
             # We already have a good dataset. Return it.
             log.info('Using cached subclient jobs')
-        return self.subclient_jobs[cust_num]['jobs']
+        return self.subclient_jobs['id'][subclient_id]['jobs']
+
+    def get_subclient_jobs_by_name(self, jobs, subclient_name, last=None):
+        """Get list of jobs relevant to a specific subclient.
+
+        Given a list of jobs and subclient name match subclient jobs.
+        This makes the significant assumption that the subclient name
+        will be contained in @subclientName.
+        """
+        def get_from_source(**kwargs):
+            """Retrieve new data.
+
+            Since we do not yet have a matching dataset, we must go to
+            the source.
+            """
+            log.info('Getting subclient jobs from source using name {}'
+                     .format(subclient_name))
+            self.subclient_jobs['name'][subclient_name] = {}
+            self.subclient_jobs['name'][subclient_name]['last'] = last
+            self.subclient_jobs['name'][subclient_name]['jobs'] = sorted(
+                [
+                    job for job in jobs
+                    if subclient_name in job['jobSummary']['subclient']['@subclientName']
+                ],
+                key=lambda job: job['jobSummary']['@jobStartTime'],
+                reverse=True
+            )[:last]
+
+        if subclient_name not in self.subclient_jobs['name']:
+            get_from_source(**locals())
+        elif self.subclient_jobs['name'][subclient_name]['last'] != last:
+            get_from_source(**locals())
+        else:
+            # We already have a good dataset. Return it.
+            log.info('Using cached subclient jobs')
+        return self.subclient_jobs['name'][subclient_name]['jobs']
 
     def get_job_details(self, client_id, job_id):
-        """
-        Get details about a given job
-        """
+        """Get details about a given job."""
         path = 'JobDetails'
         payload = {
             'JobManager_JobDetailRequest': {
@@ -249,9 +270,7 @@ class CommvaultSession(object):
         return self.job_details
 
     def get_job_vmstatus(self, job_details):
-        """
-        Get all vmStatus entries for a given job
-        """
+        """Get all vmStatus entries for a given job."""
         try:
             vms = job_details['clientStatusInfo']['vmStatus']
         except TypeError as e:
@@ -268,9 +287,7 @@ class CommvaultSession(object):
         return self.job_vmstatus
 
     def logout(self):
-        """
-        End session
-        """
+        """End session."""
         path = 'Logout'
         res = self.request('POST', path)
         self.headers['Authtoken'] = None
