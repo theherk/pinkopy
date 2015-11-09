@@ -13,6 +13,20 @@ class PinkopyError(Exception):
     pass
 
 
+def raise_requests_error(status_code, msg):
+    """Raise a requests error.
+
+    Commvault is not smart enough to return the proper error,
+    specifically in the case of 404.
+    """
+    log.error(msg)
+    res = requests.Response()
+    res.status_code = status_code
+    _e = requests.exceptions.HTTPError(msg)
+    _e.response = res
+    raise _e
+
+
 class CommvaultSession(object):
     def __init__(self, service, user, pw):
         self.service = service
