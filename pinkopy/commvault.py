@@ -9,6 +9,10 @@ import xmltodict
 log = logging.getLogger(__name__)
 
 
+class PinkopyError(Exception):
+    pass
+
+
 class CommvaultSession(object):
     def __init__(self, service, user, pw):
         self.service = service
