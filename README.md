@@ -1,6 +1,8 @@
 pinkopy
 =======
 
+[![Build Status](https://travis-ci.org/theherk/pinkopy.svg)](https://travis-ci.org/theherk/pinkopy)
+
 pinkopy is a Python wrapper for the Commvault api. Of course it does very little initially, but there is no reason to duplicate work across projects.
 
 Installation
