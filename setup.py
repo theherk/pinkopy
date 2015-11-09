@@ -14,7 +14,7 @@ install_requires = [
 
 setup(
     name='pinkopy',
-    version='0.2.0',
+    version='0.3.dev',
     description='Python wrapper for Commvault api',
     long_description=readme,
     author='Herkermer Sherwood',
