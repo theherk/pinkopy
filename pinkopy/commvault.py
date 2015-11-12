@@ -292,9 +292,15 @@ class CommvaultSession(object):
 
             Since we do not yet have a matching dataset, we must go to
             the source.
+
+            May return more than expected since this is not an exact
+            match. The partial match requires only that the passed in
+            name is contained in @subclientName.
             """
             log.info('Getting subclient jobs from source using name {}'
                      .format(subclient_name))
+            print('Getting subclient jobs from source using name {}'
+                  .format(subclient_name))
             return sorted(
                 [
                     job for job in jobs
@@ -312,13 +318,17 @@ class CommvaultSession(object):
                 subclient = None
         elif subclient_name:
             try:
-                subclient = [_ for _ in self.subclient_jobs if _.name == subclient_name][0]
+                # Could return incorrect data. If the name passed to this method
+                # has more than one partial match and the correct record is not
+                # first in this list, then you get the wrong jobs.
+                subclient = [_ for _ in self.subclient_jobs if subclient_name in _.name][0]
+                print('cache worked')
             except IndexError as e:
                 # subclient not yet cached
                 subclient = None
         if (not subclient
-            or subclient['last'] != last
-            or datetime.now() > subclient['last_updated'] + timedelta(hours=1)):
+            or self.subclient_jobs[subclient]['last'] != last
+            or datetime.now() > self.subclient_jobs[subclient]['last_updated'] + timedelta(hours=1)):
             _subclient_jobs = {
                 'jobs': get_from_source_by_id(**locals()) if subclient_id else get_from_source_by_name(**locals()),
                 'last': last,
