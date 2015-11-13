@@ -94,7 +94,6 @@ class CommvaultSession(object):
     def get_token(self):
         """Login to Commvault and get token."""
         path = 'Login'
-        headers = self.headers
         payload = {
             'DM2ContentIndexing_CheckCredentialReq': {
                 '@mode': 'Webconsole',
@@ -102,7 +101,7 @@ class CommvaultSession(object):
                 '@password': b64encode(self.pw.encode('UTF-8')).decode('UTF-8')
             }
         }
-        res = self.request('POST', path, headers=headers, payload=payload)
+        res = self.request('POST', path, payload=payload)
         data = res.json()
         if data['DM2ContentIndexing_CheckCredentialResp'] is not None:
             self.headers['Authtoken'] = data['DM2ContentIndexing_CheckCredentialResp']['@token']
