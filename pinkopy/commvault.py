@@ -55,8 +55,15 @@ class CommvaultSession(object):
         self.logout()
 
     def request(self, method, path, qstr_vals=None, service=None,
-                headers=None, payload=None, **kwargs):
+                headers=None, payload=None, attempt=None, **kwargs):
         """Make a request to Commvault."""
+        # We may need to recall the same request.
+        # Must pop self because it is passed implicitly and cannot
+        # be passed twice.
+        _context = {k: v for k, v in locals().items() if k is not 'self'}
+        allowed_attempts = 3
+        attempt = 1 if not attempt else attempt
+
         service = service if service else self.service
         headers = headers if headers else self.headers
         try:
@@ -68,18 +75,24 @@ class CommvaultSession(object):
                 res = requests.get(service + path, headers=headers, params=payload)
             else:
                 raise ValueError('HTTP method {} not supported'.format(method))
-            if res.status_code == 401 and headers['Authtoken'] is not None:
-                # token went bad, login again
+            if (res.status_code == 401
+                and headers['Authtoken'] is not None
+                and attempt <= allowed_attempts):
+                # Token went bad, login again.
                 log.info('Commvault token logged out. Logging back in.')
-                # delay is so I don't get into recursion trouble if I can't login right away
+                # Delay is so I don't get into recursion trouble if I can't login right away.
                 time.sleep(5)
                 self.get_token()
-                # We need to recall with the same request to continue.
-                # Must pop self because it is passed implicitly and cannot
-                # be passed twice.
-                _ = locals()
-                del _['self']
-                return self.request(**_)
+                # Recall the same function, after having logged back into Commvault.
+                attempt += 1
+                _context['attempt'] = attempt
+                return self.request(**_context)
+            elif attempt > allowed_attempts:
+                # Commvault probably down, raise exception.
+                msg = ('Could not log back into Commvault after {} '
+                       'attempts. It could be down.'
+                       .format(allowed_attempts))
+                raise_requests_error(401, msg)
             elif res.status_code != 200:
                 res.raise_for_status()
             else:
@@ -94,7 +107,6 @@ class CommvaultSession(object):
     def get_token(self):
         """Login to Commvault and get token."""
         path = 'Login'
-        headers = self.headers
         payload = {
             'DM2ContentIndexing_CheckCredentialReq': {
                 '@mode': 'Webconsole',
@@ -102,7 +114,7 @@ class CommvaultSession(object):
                 '@password': b64encode(self.pw.encode('UTF-8')).decode('UTF-8')
             }
         }
-        res = self.request('POST', path, headers=headers, payload=payload)
+        res = self.request('POST', path, payload=payload)
         data = res.json()
         if data['DM2ContentIndexing_CheckCredentialResp'] is not None:
             self.headers['Authtoken'] = data['DM2ContentIndexing_CheckCredentialResp']['@token']
@@ -236,20 +248,23 @@ class CommvaultSession(object):
                 qstr_vals['jobFilter'] = job_filter
             res = self.request('GET', path, qstr_vals=qstr_vals)
             data = res.json()
-            self.client_jobs[client_id] = {}
-            self.client_jobs[client_id]['job_filter'] = job_filter
-            self.client_jobs[client_id]['last'] = last
-            self.client_jobs[client_id]['jobs'] = sorted(
+            return sorted(
                 data['JobManager_JobListResponse']['jobs'],
                 key=lambda job: job['jobSummary']['subclient']['@subclientName'],
                 reverse=True
             )[:last]
 
-        if client_id not in self.client_jobs:
-            get_from_source(**locals())
-        elif (self.client_jobs[client_id]['job_filter'] != job_filter
-              or self.client_jobs[client_id]['last'] != last):
-            get_from_source(**locals())
+        if (client_id not in self.client_jobs
+            or self.client_jobs[client_id]['job_filter'] != job_filter
+            or self.client_jobs[client_id]['last'] != last
+            or datetime.now() > self.client_jobs[client_id]['last_updated'] + timedelta(hours=1)):
+            # Get new data
+            self.client_jobs[client_id] = {
+                'jobs': get_from_source(**locals()),
+                'last': last,
+                'job_filter': job_filter,
+                'last_updated': datetime.now()
+            }
         else:
             # We already have a good dataset. Return it.
             log.info('Using cached client jobs')
@@ -329,6 +344,7 @@ class CommvaultSession(object):
         if (not subclient
             or self.subclient_jobs[subclient]['last'] != last
             or datetime.now() > self.subclient_jobs[subclient]['last_updated'] + timedelta(hours=1)):
+            # Get new data
             _subclient_jobs = {
                 'jobs': get_from_source_by_id(**locals()) if subclient_id else get_from_source_by_name(**locals()),
                 'last': last,
