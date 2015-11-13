@@ -328,6 +328,7 @@ class CommvaultSession(object):
         if (not subclient
             or self.subclient_jobs[subclient]['last'] != last
             or datetime.now() > self.subclient_jobs[subclient]['last_updated'] + timedelta(hours=1)):
+            # Get new data
             _subclient_jobs = {
                 'jobs': get_from_source_by_id(**locals()) if subclient_id else get_from_source_by_name(**locals()),
                 'last': last,
