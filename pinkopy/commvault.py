@@ -248,20 +248,23 @@ class CommvaultSession(object):
                 qstr_vals['jobFilter'] = job_filter
             res = self.request('GET', path, qstr_vals=qstr_vals)
             data = res.json()
-            self.client_jobs[client_id] = {}
-            self.client_jobs[client_id]['job_filter'] = job_filter
-            self.client_jobs[client_id]['last'] = last
-            self.client_jobs[client_id]['jobs'] = sorted(
+            return sorted(
                 data['JobManager_JobListResponse']['jobs'],
                 key=lambda job: job['jobSummary']['subclient']['@subclientName'],
                 reverse=True
             )[:last]
 
-        if client_id not in self.client_jobs:
-            get_from_source(**locals())
-        elif (self.client_jobs[client_id]['job_filter'] != job_filter
-              or self.client_jobs[client_id]['last'] != last):
-            get_from_source(**locals())
+        if (client_id not in self.client_jobs
+            or self.client_jobs[client_id]['job_filter'] != job_filter
+            or self.client_jobs[client_id]['last'] != last
+            or datetime.now() > self.client_jobs[client_id]['last_updated'] + timedelta(hours=1)):
+            # Get new data
+            self.client_jobs[client_id] = {
+                'jobs': get_from_source(**locals()),
+                'last': last,
+                'job_filter': job_filter,
+                'last_updated': datetime.now()
+            }
         else:
             # We already have a good dataset. Return it.
             log.info('Using cached client jobs')
