@@ -337,7 +337,6 @@ class CommvaultSession(object):
                 # has more than one partial match and the correct record is not
                 # first in this list, then you get the wrong jobs.
                 subclient = [_ for _ in self.subclient_jobs if subclient_name in _.name][0]
-                print('cache worked')
             except IndexError as e:
                 # subclient not yet cached
                 subclient = None
