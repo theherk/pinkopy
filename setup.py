@@ -14,13 +14,13 @@ install_requires = [
 
 setup(
     name='pinkopy',
-    version='1.3.dev',
+    version='1.2.1',
     description='Python wrapper for Commvault api',
     long_description=readme,
     author='Herkermer Sherwood',
     author_email='theherk@gmail.com',
     url='https://github.com/theherk/pinkopy',
-    download_url='https://github.com/theherk/pinkopy/archive/1.3.dev.zip',
+    download_url='https://github.com/theherk/pinkopy/archive/1.2.1.zip',
     packages=find_packages(),
     platforms=['all'],
     license='MIT',
