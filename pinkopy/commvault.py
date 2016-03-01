@@ -97,9 +97,9 @@ class CommvaultSession(object):
                 res.raise_for_status()
             else:
                 return res
-        except requests.exceptions.HTTPError as e:
+        except requests.exceptions.HTTPError:
             raise
-        except Exception as e:
+        except Exception:
             msg = 'Pinkopy request failed.'
             log.exception(msg)
             raise PinkopyError(msg)
@@ -157,7 +157,7 @@ class CommvaultSession(object):
                 lambda x: x['client']['clientEntity']['@clientId'] == client_id,
                 self.clients
             ))[0]
-        except IndexError as e:
+        except IndexError:
             msg = 'Client {} not in client list.'.format(client_id)
             raise_requests_error(404, msg)
 
@@ -188,7 +188,7 @@ class CommvaultSession(object):
                     'properties': get_from_source(**locals()),
                     'last_updated': datetime.now()
                 }
-            except Exception as e:
+            except Exception:
                 msg = 'Unable to get client properties for client {}'.format(client_id)
                 log.exception(msg)
                 raise PinkopyError(msg)
@@ -205,7 +205,7 @@ class CommvaultSession(object):
     def get_subclients(self, client_id):
         """Get list of subclients for given client."""
         client_id = str(client_id)
-        def get_from_source(**kwargs):
+        def get_from_source():
             log.info('Getting subclients list from source for client {}'
                      .format(client_id))
             path = 'Subclient'
@@ -223,7 +223,7 @@ class CommvaultSession(object):
                     'subclients': get_from_source(**locals()),
                     'last_updated': datetime.now()
                 }
-            except Exception as e:
+            except Exception:
                 msg = 'Unable to get subclients for client {}'.format(client_id)
                 raise_requests_error(404, msg)
             if not self.subclients[client_id]['subclients']:
@@ -238,7 +238,7 @@ class CommvaultSession(object):
     def get_jobs(self, client_id, job_filter=None, last=None):
         """Get list of jobs for a given client and filter."""
         client_id = str(client_id)
-        def get_from_source(**kwargs):
+        def get_from_source():
             log.info('Getting client jobs from source')
             path = 'Job'
             qstr_vals = {
@@ -285,7 +285,7 @@ class CommvaultSession(object):
 
         Subclient = namedtuple('Subclient', ['id', 'name'])
 
-        def get_from_source_by_id(**kwargs):
+        def get_from_source_by_id():
             """Retrieve new data.
 
             Since we do not yet have a matching dataset, we must go to
@@ -302,7 +302,7 @@ class CommvaultSession(object):
                 reverse=True
             )[:last]
 
-        def get_from_source_by_name(**kwargs):
+        def get_from_source_by_name():
             """Retrieve new data.
 
             Since we do not yet have a matching dataset, we must go to
@@ -328,7 +328,7 @@ class CommvaultSession(object):
         if subclient_id:
             try:
                 subclient = [_ for _ in self.subclient_jobs if _.id == subclient_id][0]
-            except IndexError as e:
+            except IndexError:
                 # subclient not yet cached
                 subclient = None
         elif subclient_name:
@@ -337,7 +337,7 @@ class CommvaultSession(object):
                 # has more than one partial match and the correct record is not
                 # first in this list, then you get the wrong jobs.
                 subclient = [_ for _ in self.subclient_jobs if subclient_name in _.name][0]
-            except IndexError as e:
+            except IndexError:
                 # subclient not yet cached
                 subclient = None
         if (not subclient
@@ -355,7 +355,7 @@ class CommvaultSession(object):
                     name=_subclient_jobs['jobs'][0]['jobSummary']['subclient']['@subclientName']
                 )
                 self.subclient_jobs[subclient] = _subclient_jobs
-            except IndexError as e:
+            except IndexError:
                 msg = ('No subclient jobs found for subclient_id {} / subclient_name {}'
                        .format(subclient_id, subclient_name))
                 raise_requests_error(404, msg)
@@ -379,7 +379,7 @@ class CommvaultSession(object):
         data = res.json()
         try:
             job_details = data['JobManager_JobDetailResponse']['job']['jobDetail']
-        except TypeError as e:
+        except TypeError:
             msg = 'No job details found for job {}'.format(job_id)
             raise_requests_error(404, msg)
         if not job_details:
@@ -391,7 +391,7 @@ class CommvaultSession(object):
         """Get all vmStatus entries for a given job."""
         try:
             vms = job_details['clientStatusInfo']['vmStatus']
-        except TypeError as e:
+        except TypeError:
             #no vmstatus
             vms = None
         if vms is not None:
@@ -407,6 +407,6 @@ class CommvaultSession(object):
     def logout(self):
         """End session."""
         path = 'Logout'
-        res = self.request('POST', path)
+        self.request('POST', path)
         self.headers['Authtoken'] = None
         return None
