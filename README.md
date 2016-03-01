@@ -33,6 +33,23 @@ with CommvaultSession(**config) as s:
         job_vmstatus = s.get_job_vmstatus(job_details)
 ```
 
+Contribution
+------------
+
+Please do contribute to this repository. It currently only supports a small set of the api provided by Commvault. However, if you do contribute, please follow these guidelines.
+
+### Guidelines
+
++ Use [Gitflow](https://www.atlassian.com/git/tutorials/comparing-workflows/). Your pull requests must come from a Gitflow branch.
+    - feature/yourfeature
+    - bugfix/issuenumber
++ **ONLY** imperative commit messages. Line one is one imperative, brief sentence. Following lines may have more details.
++ Builds must pass (which should be pretty easy right now, since there are no tests).
++ Never commit binary files.
++ Make sure you are committing with your Github user.
+
+---
+
 #### Name
 
 The name was originally going to be commpy, but then I liked commiepy. From here it was only a small leap to pinkopy, a tribute to a dear friend of mine.
