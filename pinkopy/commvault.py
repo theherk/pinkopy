@@ -227,7 +227,7 @@ class CommvaultSession(object):
                 msg = 'Unable to get subclients for client {}'.format(client_id)
                 raise_requests_error(404, msg)
             if not self.subclients[client_id]['subclients']:
-                self.subclients.pop(clients_id, None)
+                self.subclients.pop(client_id, None)
                 msg = 'No subclients for client {}'.format(client_id)
                 raise_requests_error(404, msg)
         else:
