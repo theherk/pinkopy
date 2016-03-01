@@ -248,11 +248,19 @@ class CommvaultSession(object):
                 qstr_vals['jobFilter'] = job_filter
             res = self.request('GET', path, qstr_vals=qstr_vals)
             data = res.json()
-            return sorted(
-                data['JobManager_JobListResponse']['jobs'],
-                key=lambda job: job['jobSummary']['subclient']['@subclientName'],
-                reverse=True
-            )[:last]
+            try:
+                return sorted(
+                    data['JobManager_JobListResponse']['jobs'],
+                    key=lambda job: job['jobSummary']['subclient']['@subclientName'],
+                    reverse=True
+                )[:last]
+            except KeyError as err:
+                try:
+                    if 'DB Error' in data['CVGui_GenericResp']['@errorMessage']:
+                        msg = 'Commvault is down... Sorry'
+                        raise_requests_error(503, msg)
+                except KeyError:
+                    raise err
 
         if (client_id not in self.client_jobs
             or self.client_jobs[client_id]['job_filter'] != job_filter
