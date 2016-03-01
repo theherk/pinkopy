@@ -274,11 +274,11 @@ class CommvaultSession(object):
                            subclient_name=None, last=None):
         """Get list of jobs relevant to a specific subclient."""
         subclient_id = str(subclient_id) if subclient_id else None
-        if (subclient_id is None and subclient_name is None):
+        if subclient_id is None and subclient_name is None:
             msg = 'Cannot get subclient jobs without name or id'
             log.error(msg)
             raise PinkopyError(msg)
-        elif (subclient_id is not None and subclient_name is not None):
+        elif subclient_id is not None and subclient_name is not None:
             msg = ('Cannot get subclient jobs by both name and id. '
                    'Selecting id by default.')
             log.info(msg)
