@@ -18,6 +18,12 @@ log = logging.getLogger(__name__)
         self.subclients = SubclientSession(*args, **kwargs)
         self.jobs = JobSession(*args, **kwargs)
 
+        # shim for backwards compatibility
+        self.get_client = self.clients.get_client
+        self.get_client_properties = self.clients.get_client_properties
+        self.get_clients = self.clients.get_clients
+
+        self.get_subclients = self.subclients.get_subclients
 
 class CommvaultSession(object):
     def __init__(self, service, user, pw):
@@ -38,6 +44,10 @@ class CommvaultSession(object):
         self.job_vmstatus = None
         self.get_token()
         self.get_clients()
+        self.get_job_details = self.jobs.get_job_details
+        self.get_job_vmstatus = self.jobs.get_job_vmstatus
+        self.get_jobs = self.jobs.get_jobs
+        self.get_subclient_jobs = self.jobs.get_subclient_jobs
 
     def __enter__(self):
         return self
