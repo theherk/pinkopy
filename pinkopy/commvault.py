@@ -14,6 +14,9 @@ log = logging.getLogger(__name__)
 
 
     """
+        self.clients = ClientSession(*args, **kwargs)
+        self.subclients = SubclientSession(*args, **kwargs)
+        self.jobs = JobSession(*args, **kwargs)
 
 
 class CommvaultSession(object):
