@@ -19,9 +19,10 @@ class CommvaultSession(BaseSession):
     the past.
     """
     def __init__(self, *args, **kwargs):
-        self.clients = ClientSession(*args, **kwargs)
-        self.subclients = SubclientSession(*args, **kwargs)
-        self.jobs = JobSession(*args, **kwargs)
+        cache_methods = None
+        self.clients = ClientSession(cache_methods, *args, **kwargs)
+        self.subclients = SubclientSession(cache_methods, *args, **kwargs)
+        self.jobs = JobSession(cache_methods, *args, **kwargs)
 
         # shim for backwards compatibility
         self.get_client = self.clients.get_client

@@ -137,7 +137,7 @@ class BaseSession(object):
             else:
                 log.info('CMDBSession made request to {0}'.format(url))
                 return res
-        except requests.exceptions.HTTPError as err:
+        except requests.HTTPError as err:
             log.error(err)
             raise
         except Exception:
