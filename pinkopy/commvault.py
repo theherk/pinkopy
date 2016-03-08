@@ -36,6 +36,7 @@ class CommvaultSession(BaseSession):
         self.get_jobs = self.jobs.get_jobs
         self.get_subclient_jobs = self.jobs.get_subclient_jobs
 
+        self.__cache_methods = list({m for obj in self.subsessions for m in obj.cache_methods})
 
     def logout(self):
         """End session for all subsessions."""
