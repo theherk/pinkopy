@@ -14,8 +14,6 @@ class TestPinkopyError(unittest.TestCase):
         raise PinkopyError(msg)
     except PinkopyError as e:
         assert msg == e.args[0]
-    except Exception as e:
-        pytest.fail(e, pytrace=True)
 
 
 class TestModuleMethods(unittest.TestCase):
@@ -27,8 +25,6 @@ class TestModuleMethods(unittest.TestCase):
                 exceptions.raise_requests_error(status_code, msg)
         except requests.HTTPError as e:
             assert msg == e.args[0]
-        except Exception as e:
-            pytest.fail(e, pytrace=True)
 
 if __name__ == '__main__':
     unittest.main()

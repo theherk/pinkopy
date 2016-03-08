@@ -1,7 +1,5 @@
 import unittest
 
-import pytest
-
 from pinkopy.base_session import BaseSession
 from tests.pinkopy import test_helper
 
@@ -19,11 +17,8 @@ class TestBaseSessionMethods(unittest.TestCase):
     def test__enable_method_cache(self):
         base_session = test_helper.mock_session(BaseSession)['Session']
         for method_name in base_session.cache_methods:
-            try:
-                method = getattr(base_session, method_name)
-                assert method.ttl_cache() is not None
-            except Exception as e:
-                pytest.fail(e, pytrace=True)
+            method = getattr(base_session, method_name)
+            assert method.ttl_cache() is not None
 
     def test_get_token(self):
         # not yet implemented
