@@ -1,11 +1,11 @@
 from base64 import b64encode
-from datetime import timedelta
 import logging
 from urllib.parse import urlencode, urljoin
 import xmltodict
 
 from cachetools.func import ttl_cache
 import requests
+from datetime import time
 
 from .exceptions import PinkopyError, raise_requests_error
 

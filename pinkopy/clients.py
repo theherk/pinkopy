@@ -2,7 +2,7 @@ import logging
 import xmltodict
 
 from .base_session import BaseSession
-from .exceptions import PinkopyError, raise_requests_error
+from .exceptions import raise_requests_error
 
 log = logging.getLogger(__name__)
 
