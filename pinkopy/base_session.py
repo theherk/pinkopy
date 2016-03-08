@@ -72,6 +72,12 @@ class BaseSession(object):
     def cache_methods(self):
         return self.__cache_methods
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.logout()
+
     def request(self, method, path, attempt=None, headers=None, payload=None,
                 payload_nondict=None, qstr_vals=None, service=None):
         """Make request.

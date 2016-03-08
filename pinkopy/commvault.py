@@ -32,11 +32,6 @@ class CommvaultSession(BaseSession):
         self.get_jobs = self.jobs.get_jobs
         self.get_subclient_jobs = self.jobs.get_subclient_jobs
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exception_type, exception_value, traceback):
-        self.logout()
 
     def logout(self):
         """End session."""
