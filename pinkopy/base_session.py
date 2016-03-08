@@ -1,5 +1,4 @@
 from base64 import b64encode
-from datetime import timedelta
 import logging
 from urllib.parse import urlencode, urljoin
 import xmltodict
