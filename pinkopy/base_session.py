@@ -25,16 +25,18 @@ class BaseSession(object):
     Returns:
         session object
     """
-    def __init__(self, service, user, pw, use_cache=True, cache_ttl=1200, cache_methods=None):
+    def __init__(self, service, user, pw, use_cache=True, cache_ttl=1200,
+                 cache_methods=None, token=None):
         self.service = service
         self.user = user
         self.pw = pw
         self.headers = {
-            'Authtoken': None,
+            'Authtoken': token,
             'Accept': 'application/json',
             'Content-type': 'application/json'
         }
-        self.get_token()
+        if not self.headers['Authtoken']:
+            self.get_token()
         self.__use_cache = bool(use_cache)
         self.__cache_ttl = cache_ttl
         self.__cache_methods = cache_methods or []
@@ -186,3 +188,10 @@ class BaseSession(object):
             except KeyError:
                 msg = 'Commvault user or pass incorrect'
                 raise_requests_error(401, msg)
+
+    def logout(self):
+        """End session."""
+        path = 'Logout'
+        self.request('POST', path)
+        self.headers['Authtoken'] = None
+        return None

@@ -16,9 +16,13 @@ class CommvaultSession(BaseSession):
     the past.
     """
     def __init__(self, *args, **kwargs):
-        self.clients = ClientSession(*args, **kwargs)
-        self.subclients = SubclientSession(*args, **kwargs)
-        self.jobs = JobSession(*args, **kwargs)
+        self.clients = ClientSession(token=self.headers['Authtoken'], *args, **kwargs)
+        self.subclients = SubclientSession(token=self.headers['Authtoken'], *args, **kwargs)
+        self.jobs = JobSession(token=self.headers['Authtoken'], *args, **kwargs)
+
+        self.subsessions = [self.clients,
+                            self.subclients,
+                            self.jobs]
 
         # shim for backwards compatibility
         self.get_client = self.clients.get_client
@@ -34,8 +38,10 @@ class CommvaultSession(BaseSession):
 
 
     def logout(self):
-        """End session."""
+        """End session for all subsessions."""
         path = 'Logout'
         self.request('POST', path)
         self.headers['Authtoken'] = None
+        for session in self.subsessions:
+            session.headers['Authtoken'] = None
         return None
