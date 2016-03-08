@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
-import sys
-
 
 with open('README.md') as f:
     readme = f.read()
 
 install_requires = [
     'requests>=2.7.0',
+    'requests_mock>=0.7.0',
+    'responses',
     'xmltodict>=0.9.2',
 ]
 
