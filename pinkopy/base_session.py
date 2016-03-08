@@ -1,5 +1,7 @@
 from base64 import b64encode
+import inspect
 import logging
+import time
 from urllib.parse import urlencode, urljoin
 import xmltodict
 
@@ -42,7 +44,7 @@ class BaseSession(object):
         self.__cache_methods = cache_methods or []
 
         if self.use_cache:
-            for method_name in self.cache_methods:
+            for method_name in set(self.cache_methods):
                 self.__enable_method_cache(method_name)
 
     def __enable_method_cache(self, method_name):
@@ -56,7 +58,8 @@ class BaseSession(object):
         """
         try:
             method = getattr(self, method_name)
-            setattr(self, method_name, ttl_cache(ttl=self.cache_ttl)(method))
+            if not inspect.isfunction(method.cache_info):
+                setattr(self, method_name, ttl_cache(ttl=self.cache_ttl)(method))
             return True
         except AttributeError:
             # method doesn't exist on initializing class
