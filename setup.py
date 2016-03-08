@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
-import sys
-
 
 with open('README.md') as f:
     readme = f.read()

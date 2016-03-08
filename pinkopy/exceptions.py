@@ -21,7 +21,7 @@ def raise_requests_error(status_code, msg):
     log.error(msg)
     res = requests.Response()
     res.status_code = status_code
-    err = requests.exceptions.HTTPError(msg)
+    err = requests.HTTPError(msg)
     err.response = res
     raise err
 

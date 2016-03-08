@@ -1,11 +1,11 @@
 from base64 import b64encode
-from datetime import timedelta
 import logging
 from urllib.parse import urlencode, urljoin
 import xmltodict
 
 from cachetools.func import ttl_cache
 import requests
+from datetime import time
 
 from .exceptions import PinkopyError, raise_requests_error
 
@@ -137,7 +137,7 @@ class BaseSession(object):
             else:
                 log.info('CMDBSession made request to {0}'.format(url))
                 return res
-        except requests.exceptions.HTTPError as err:
+        except requests.HTTPError as err:
             log.error(err)
             raise
         except Exception:
