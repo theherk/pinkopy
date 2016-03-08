@@ -7,8 +7,6 @@ with open('README.md') as f:
 
 install_requires = [
     'requests>=2.7.0',
-    'requests_mock>=0.7.0',
-    'responses',
     'xmltodict>=0.9.2',
 ]
 
