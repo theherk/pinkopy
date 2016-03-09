@@ -8,6 +8,7 @@ with open('README.md') as f:
     readme = f.read()
 
 install_requires = [
+    'cachetools>=1.1.5',
     'requests>=2.7.0',
     'xmltodict>=0.9.2',
 ]

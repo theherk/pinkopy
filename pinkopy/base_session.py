@@ -23,6 +23,10 @@ class BaseSession(object):
         user (str): Commvault username
         pw (str): Commvault password
         use_cache (optional[bool]): Use cache? Defaults to False
+        cache_ttl (optional[int]): Duration cache lives. Defaults to 1200.
+        cache_methods (optional[int]): List of methods to cache.
+            Defaults provided by the inheriting classes.
+        token (optional[str]): Authtoken for header
 
     Returns:
         session object
@@ -67,14 +71,17 @@ class BaseSession(object):
 
     @property
     def use_cache(self):
+        """Boolean to use cache or not."""
         return self.__use_cache
 
     @property
     def cache_ttl(self):
+        """Duration cache lives."""
         return self.__cache_ttl
 
     @property
     def cache_methods(self):
+        """List of methods to cache."""
         return self.__cache_methods
 
     def __enter__(self):
@@ -174,7 +181,7 @@ class BaseSession(object):
             else:
                 msg = 'Commvault user or pass incorrect'
                 raise_requests_error(401, msg)
-        except KeyError as err:
+        except KeyError:
             log.info('Commvault login with json is broken. Trying with xml.')
             headers = {
                 'Accept': 'application/xml',
