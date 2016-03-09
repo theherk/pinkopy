@@ -16,6 +16,9 @@ class CommvaultSession(BaseSession):
     the past.
     """
     def __init__(self, *args, **kwargs):
+        """Initialize route classes and shim."""
+        super().__init__(*args, **kwargs)
+
         self.clients = ClientSession(token=self.headers['Authtoken'], *args, **kwargs)
         self.subclients = SubclientSession(token=self.headers['Authtoken'], *args, **kwargs)
         self.jobs = JobSession(token=self.headers['Authtoken'], *args, **kwargs)
