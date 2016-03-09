@@ -181,7 +181,7 @@ class BaseSession(object):
             else:
                 msg = 'Commvault user or pass incorrect'
                 raise_requests_error(401, msg)
-        except KeyError as err:
+        except KeyError:
             log.info('Commvault login with json is broken. Trying with xml.')
             headers = {
                 'Accept': 'application/xml',
