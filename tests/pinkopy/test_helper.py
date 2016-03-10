@@ -20,7 +20,8 @@ def mock_session(base_session, service='http://example.com', user='user', pw='pw
     with requests_mock.mock() as m:
         m.get(service + '/Client', json=get_response)
         m.post(service + '/Login', headers=headers, json=post_response)
-        session = base_session(service, user, pw)
+        cache = True
+        session = base_session(service, user, pw, cache)
         test_data = {
             'Clients': clients,
             'Content-type': content_type,

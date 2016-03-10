@@ -1,5 +1,7 @@
 import unittest
 
+import requests_mock
+
 from pinkopy import CommvaultSession
 from tests.pinkopy import test_helper
 
@@ -30,10 +32,14 @@ class TestCommvaultSessionMethods(unittest.TestCase):
         assert session == session.__enter__()
 
     def test_logout(self):
-        session = test_helper.mock_session(CommvaultSession)['Session']
-        result = session.logout()
-        assert result is None
-        assert session.headers['Authtoken'] is None
+        test_data = test_helper.mock_session(CommvaultSession)
+        session = test_data['Session']
+        with requests_mock.mock() as m:
+            service = test_data['Service']
+            m.post(service + '/Logout', headers={}, json={})
+            result = session.logout()
+            assert result is None
+            assert session.headers['Authtoken'] is None
 
 
 if __name__ == '__main__':
