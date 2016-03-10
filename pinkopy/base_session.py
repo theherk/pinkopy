@@ -152,7 +152,7 @@ class BaseSession(object):
             elif res.status_code != 200:
                 res.raise_for_status()
             else:
-                log.info('CMDBSession made request to {0}'.format(url))
+                log.info('request: {} {}'.format(method, url))
                 return res
         except requests.exceptions.HTTPError as err:
             log.error(err)
