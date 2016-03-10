@@ -1,14 +1,11 @@
-import requests_mock
 import uuid
 
-
-def get_uuid():
-    return str(uuid.uuid4())
+import requests_mock
 
 
-def mock_session(base_session, service='http://' + get_uuid(),
-                 user=get_uuid(), pw=get_uuid(), token=get_uuid(),
-                 content_type='application/json', clients=get_uuid()
+def mock_session(base_session, service='http://' + str(uuid.uuid4()),
+                 user=str(uuid.uuid4()), pw=str(uuid.uuid4()), token=str(uuid.uuid4()),
+                 content_type='application/json', clients=str(uuid.uuid4())
                  ):
     get_payload = {
         'App_GetClientPropertiesResponse': {
