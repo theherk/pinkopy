@@ -1,4 +1,5 @@
 import logging
+
 from .base_session import BaseSession
 from .clients import ClientSession
 from .jobs import JobSession
@@ -15,10 +16,16 @@ class CommvaultSession(BaseSession):
     the past.
     """
     def __init__(self, *args, **kwargs):
-        cache_methods = None
-        self.clients = ClientSession(cache_methods, *args, **kwargs)
-        self.subclients = SubclientSession(cache_methods, *args, **kwargs)
-        self.jobs = JobSession(cache_methods, *args, **kwargs)
+        """Initialize route classes and shim."""
+        super().__init__(*args, **kwargs)
+
+        self.clients = ClientSession(token=self.headers['Authtoken'], *args, **kwargs)
+        self.subclients = SubclientSession(token=self.headers['Authtoken'], *args, **kwargs)
+        self.jobs = JobSession(token=self.headers['Authtoken'], *args, **kwargs)
+
+        self.subsessions = [self.clients,
+                            self.subclients,
+                            self.jobs]
 
         # shim for backwards compatibility
         self.get_client = self.clients.get_client
@@ -32,15 +39,13 @@ class CommvaultSession(BaseSession):
         self.get_jobs = self.jobs.get_jobs
         self.get_subclient_jobs = self.jobs.get_subclient_jobs
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exception_type, exception_value, traceback):
-        self.logout()
+        self.__cache_methods = list({m for obj in self.subsessions for m in obj.cache_methods})
 
     def logout(self):
-        """End session."""
+        """End session for all subsessions."""
         path = 'Logout'
         self.request('POST', path)
         self.headers['Authtoken'] = None
+        for session in self.subsessions:
+            session.headers['Authtoken'] = None
         return None

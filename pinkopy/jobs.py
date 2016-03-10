@@ -35,12 +35,18 @@ class JobSession(BaseSession):
             qstr_vals['jobFilter'] = job_filter
         res = self.request('GET', path, qstr_vals=qstr_vals)
         data = res.json()
-        jobs = sorted(
-            data['JobManager_JobListResponse']['jobs'],
-            key=lambda job: job['jobSummary']['subclient']['@subclientName'],
-            reverse=True
-        )[:last]
-        # TODO (h4s): handle errors here
+        try:
+            jobs = sorted(
+                data['jobs'],
+                key=lambda job: job['jobSummary']['subclient']['subclientName'],
+                reverse=True
+            )[:last]
+        except KeyError:
+            jobs = sorted(
+                data['JobManager_JobListResponse']['jobs'],
+                key=lambda job: job['jobSummary']['subclient']['@subclientName'],
+                reverse=True
+            )[:last]
         return jobs
 
     @staticmethod
@@ -69,23 +75,38 @@ class JobSession(BaseSession):
             log.info(msg)
 
         if subclient_id:
-            jobs = sorted(
-                [job for job in jobs
-                 if job['jobSummary']['subclient']['@subclientId'] == subclient_id],
-                key=lambda job: job['jobSummary']['@jobStartTime'],
-                reverse=True
-            )[:last]
+            try:
+                jobs = sorted(
+                    [job for job in jobs
+                     if str(job['jobSummary']['subclient']['subclientId']) == subclient_id],
+                    key=lambda job: job['jobSummary']['jobStartTime'],
+                    reverse=True
+                )[:last]
+            except KeyError:
+                jobs = sorted(
+                    [job for job in jobs
+                     if str(job['jobSummary']['subclient']['@subclientId']) == subclient_id],
+                    key=lambda job: job['jobSummary']['@jobStartTime'],
+                    reverse=True
+                )[:last]
         else:
             # Could return incorrect data. If the name passed to this method
             # has more than one partial match and the correct record is not
             # first in this list, then you get the wrong jobs.
-            jobs = sorted(
-                [job for job in jobs
-                 if subclient_name in job['jobSummary']['subclient']['@subclientName']],
-                key=lambda job: job['jobSummary']['@jobStartTime'],
-                reverse=True
-            )[:last]
-
+            try:
+                jobs = sorted(
+                    [job for job in jobs
+                     if subclient_name in job['jobSummary']['subclient']['subclientName']],
+                    key=lambda job: job['jobSummary']['jobStartTime'],
+                    reverse=True
+                )[:last]
+            except KeyError:
+                jobs = sorted(
+                    [job for job in jobs
+                     if subclient_name in job['jobSummary']['subclient']['@subclientName']],
+                    key=lambda job: job['jobSummary']['@jobStartTime'],
+                    reverse=True
+                )[:last]
         if not jobs:
             msg = ('No subclient jobs found for subclient_id {} / subclient_name {}'
                    .format(subclient_id, subclient_name))
@@ -113,7 +134,20 @@ class JobSession(BaseSession):
         res = self.request('POST', path, payload=payload)
         data = res.json()
         try:
-            job_details = data['JobManager_JobDetailResponse']['job']['jobDetail']
+            job_details = data['job']['jobDetail']
+        except KeyError:
+            try:
+                job_details = data['JobManager_JobDetailResponse']['job']['jobDetail']
+            except KeyError:
+                # Make new request with xml because Commvault seems to have
+                # broken the json request on this route.
+                headers = self.headers.copy()
+                headers['Content-type'] = 'application/xml'
+                payload_nondict = ('<JobManager_JobDetailRequest jobId="{}"/>'
+                                   .format(job_id))
+                res = self.request('POST', path, headers=headers, payload_nondict=payload_nondict)
+                data = res.json()
+                job_details = data['job']['jobDetail']
         except TypeError:
             msg = 'No job details found for job {}'.format(job_id)
             raise_requests_error(404, msg)

@@ -1,11 +1,12 @@
 from base64 import b64encode
+import inspect
 import logging
+import time
 from urllib.parse import urlencode, urljoin
 import xmltodict
 
 from cachetools.func import ttl_cache
 import requests
-from datetime import time
 
 from .exceptions import PinkopyError, raise_requests_error
 
@@ -22,26 +23,32 @@ class BaseSession(object):
         user (str): Commvault username
         pw (str): Commvault password
         use_cache (optional[bool]): Use cache? Defaults to False
+        cache_ttl (optional[int]): Duration cache lives. Defaults to 1200.
+        cache_methods (optional[int]): List of methods to cache.
+            Defaults provided by the inheriting classes.
+        token (optional[str]): Authtoken for header
 
     Returns:
         session object
     """
-    def __init__(self, service, user, pw, use_cache=True, cache_ttl=1200, cache_methods=None):
+    def __init__(self, service, user, pw, use_cache=True, cache_ttl=1200,
+                 cache_methods=None, token=None):
         self.service = service
         self.user = user
         self.pw = pw
         self.headers = {
-            'Authtoken': None,
+            'Authtoken': token,
             'Accept': 'application/json',
             'Content-type': 'application/json'
         }
-        self.get_token()
+        if not self.headers['Authtoken']:
+            self.get_token()
         self.__use_cache = bool(use_cache)
         self.__cache_ttl = cache_ttl
         self.__cache_methods = cache_methods or []
 
         if self.use_cache:
-            for method_name in self.cache_methods:
+            for method_name in set(self.cache_methods):
                 self.__enable_method_cache(method_name)
 
     def __enable_method_cache(self, method_name):
@@ -55,7 +62,8 @@ class BaseSession(object):
         """
         try:
             method = getattr(self, method_name)
-            setattr(self, method_name, ttl_cache(ttl=self.cache_ttl)(method))
+            if not inspect.isfunction(method.cache_info):
+                setattr(self, method_name, ttl_cache(ttl=self.cache_ttl)(method))
             return True
         except AttributeError:
             # method doesn't exist on initializing class
@@ -63,15 +71,24 @@ class BaseSession(object):
 
     @property
     def use_cache(self):
+        """Boolean to use cache or not."""
         return self.__use_cache
 
     @property
     def cache_ttl(self):
+        """Duration cache lives."""
         return self.__cache_ttl
 
     @property
     def cache_methods(self):
+        """List of methods to cache."""
         return self.__cache_methods
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.logout()
 
     def request(self, method, path, attempt=None, headers=None, payload=None,
                 payload_nondict=None, qstr_vals=None, service=None):
@@ -135,9 +152,9 @@ class BaseSession(object):
             elif res.status_code != 200:
                 res.raise_for_status()
             else:
-                log.info('CMDBSession made request to {0}'.format(url))
+                log.info('request: {} {}'.format(method, url))
                 return res
-        except requests.HTTPError as err:
+        except requests.exceptions.HTTPError as err:
             log.error(err)
             raise
         except Exception:
@@ -146,7 +163,12 @@ class BaseSession(object):
             raise PinkopyError(msg)
 
     def get_token(self):
-        """Login to Commvault and get token."""
+        """Login to Commvault and get token.
+
+        Returns:
+            str: token
+                Also, sets Authtoken in default headers.
+        """
         path = 'Login'
         payload = {
             'DM2ContentIndexing_CheckCredentialReq': {
@@ -164,7 +186,7 @@ class BaseSession(object):
             else:
                 msg = 'Commvault user or pass incorrect'
                 raise_requests_error(401, msg)
-        except KeyError as err:
+        except KeyError:
             log.info('Commvault login with json is broken. Trying with xml.')
             headers = {
                 'Accept': 'application/xml',
@@ -181,3 +203,10 @@ class BaseSession(object):
             except KeyError:
                 msg = 'Commvault user or pass incorrect'
                 raise_requests_error(401, msg)
+
+    def logout(self):
+        """End session."""
+        path = 'Logout'
+        self.request('POST', path)
+        self.headers['Authtoken'] = None
+        return None

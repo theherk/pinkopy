@@ -1,24 +1,30 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
+import sys
 
-with open('README.md') as f:
-    readme = f.read()
+try:
+    import pypandoc
+    readme = pypandoc.convert('README.md', 'rst')
+except(IOError, ImportError):
+    with open('README.md') as f:
+        readme = f.read()
 
 install_requires = [
+    'cachetools>=1.1.5',
     'requests>=2.7.0',
     'xmltodict>=0.9.2',
 ]
 
 setup(
     name='pinkopy',
-    version='1.3.dev',
+    version='2.1.dev',
     description='Python wrapper for Commvault api',
     long_description=readme,
     author='Herkermer Sherwood',
     author_email='theherk@gmail.com',
     url='https://github.com/theherk/pinkopy',
-    download_url='https://github.com/theherk/pinkopy/archive/1.3.dev.zip',
+    download_url='https://github.com/theherk/pinkopy/archive/2.1.dev.zip',
     packages=find_packages(),
     platforms=['all'],
     license='MIT',

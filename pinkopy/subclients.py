@@ -30,7 +30,10 @@ class SubclientSession(BaseSession):
         }
         res = self.request('GET', path, qstr_vals=qstr_vals)
         data = res.json()
-        subclients = data['App_GetSubClientPropertiesResponse']['subClientProperties']
+        try:
+            subclients = data['subClientProperties']
+        except KeyError:
+            subclients = data['App_GetSubClientPropertiesResponse']['subClientProperties']
         if not subclients:
             msg = 'No subclients for client {}'.format(client_id)
             raise_requests_error(404, msg)
