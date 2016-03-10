@@ -1,5 +1,4 @@
 import unittest
-import uuid
 
 import pytest
 import requests
@@ -9,22 +8,24 @@ from pinkopy.exceptions import PinkopyError
 
 
 class TestPinkopyError(unittest.TestCase):
-    msg = str(uuid.uuid4())
-    try:
-        raise PinkopyError(msg)
-    except PinkopyError as e:
-        assert msg == e.args[0]
+    def test_pinkopy_error(self):
+        status_code, msg = 404, 'NOT FOUND'
+        try:
+            raise PinkopyError(status_code, msg)
+        except PinkopyError as err:
+            assert status_code == err.args[0]
+            assert msg == err.args[1]
 
 
 class TestModuleMethods(unittest.TestCase):
     def test_raise_requests_error(self):
-        msg = str(uuid.uuid4())
-        status_code = str(uuid.uuid4())
+        status_code, msg = 404, 'NOT FOUND'
         try:
             with pytest.raises(requests.HTTPError):
                 exceptions.raise_requests_error(status_code, msg)
-        except requests.HTTPError as e:
-            assert msg == e.args[0]
+        except requests.HTTPError as err:
+            assert status_code == err.args[0]
+            assert msg == err.args[1]
 
 if __name__ == '__main__':
     unittest.main()

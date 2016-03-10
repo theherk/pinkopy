@@ -1,18 +1,14 @@
-import uuid
-
 import requests_mock
 
 
-def mock_session(base_session, service='http://' + str(uuid.uuid4()),
-                 user=str(uuid.uuid4()), pw=str(uuid.uuid4()), token=str(uuid.uuid4()),
-                 content_type='application/json', clients=str(uuid.uuid4())
-                 ):
+def mock_session(base_session, service='http://example.com', user='user', pw='pw', token='token',
+                 content_type='application/json', clients=['client1', 'client2']):
     get_response = {
         'App_GetClientPropertiesResponse': {
             'clientProperties': clients
         }
     }
-    post_payload = {
+    post_response = {
         'DM2ContentIndexing_CheckCredentialResp': {
             '@token': token
         }
@@ -23,7 +19,7 @@ def mock_session(base_session, service='http://' + str(uuid.uuid4()),
     }
     with requests_mock.mock() as m:
         m.get(service + '/Client', json=get_response)
-        m.post(service + '/Login', headers=headers, json=post_payload)
+        m.post(service + '/Login', headers=headers, json=post_response)
         session = base_session(service, user, pw)
         test_data = {
             'Clients': clients,
