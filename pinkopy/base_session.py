@@ -163,7 +163,12 @@ class BaseSession(object):
             raise PinkopyError(msg)
 
     def get_token(self):
-        """Login to Commvault and get token."""
+        """Login to Commvault and get token.
+
+        Returns:
+            str: token
+                Also, sets Authtoken in default headers.
+        """
         path = 'Login'
         payload = {
             'DM2ContentIndexing_CheckCredentialReq': {
