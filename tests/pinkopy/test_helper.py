@@ -7,7 +7,7 @@ def mock_session(base_session, service='http://' + str(uuid.uuid4()),
                  user=str(uuid.uuid4()), pw=str(uuid.uuid4()), token=str(uuid.uuid4()),
                  content_type='application/json', clients=str(uuid.uuid4())
                  ):
-    get_payload = {
+    get_response = {
         'App_GetClientPropertiesResponse': {
             'clientProperties': clients
         }
@@ -22,7 +22,7 @@ def mock_session(base_session, service='http://' + str(uuid.uuid4()),
         'Content-type': content_type
     }
     with requests_mock.mock() as m:
-        m.get(service + '/Client', json=get_payload)
+        m.get(service + '/Client', json=get_response)
         m.post(service + '/Login', headers=headers, json=post_payload)
         session = base_session(service, user, pw)
         test_data = {
