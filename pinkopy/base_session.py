@@ -62,9 +62,11 @@ class BaseSession(object):
         """
         try:
             method = getattr(self, method_name)
-            if not inspect.isfunction(method.cache_info):
+            try:
+                return not inspect.isfunction(method.cache_info)
+            except AttributeError:
                 setattr(self, method_name, ttl_cache(ttl=self.cache_ttl)(method))
-            return True
+                return True
         except AttributeError:
             # method doesn't exist on initializing class
             return False
