@@ -1,5 +1,5 @@
-import unittest
 import inspect
+import unittest
 
 from pinkopy.base_session import BaseSession
 from tests.pinkopy import test_helper
