@@ -1,8 +1,14 @@
 import requests_mock
 
 
-def mock_session(base_session, service='http://example.com', user='user', pw='pw', token='token',
-                 content_type='application/json', clients=['client1', 'client2']):
+def mock_session(base_session, service=None, user=None, pw=None, token=None,
+                 content_type=None, clients=None):
+    service = service or 'http://example.com'
+    user = user or 'user'
+    pw = pw or 'pw'
+    token = token or 'token'
+    content_type = content_type or 'application/json'
+    clients = clients or ['client1', 'client2']
     get_response = {
         'App_GetClientPropertiesResponse': {
             'clientProperties': clients
