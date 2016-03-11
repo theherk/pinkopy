@@ -27,5 +27,6 @@ class TestModuleMethods(unittest.TestCase):
             assert status_code == err.args[0]
             assert msg == err.args[1]
 
+
 if __name__ == '__main__':
     unittest.main()
