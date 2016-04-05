@@ -16,6 +16,11 @@ install_requires = [
     'xmltodict>=0.9.2',
 ]
 
+tests_require = [
+    'pytest',
+    'requests-mock==0.7.0'
+]
+
 setup(
     name='pinkopy',
     version='2.1.dev',
@@ -29,6 +34,8 @@ setup(
     platforms=['all'],
     license='MIT',
     install_requires=install_requires,
+    setup_requires=['pytest-runner'],
+    tests_require=tests_require,
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: Other/Proprietary License',
