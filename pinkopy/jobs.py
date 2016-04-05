@@ -38,15 +38,15 @@ class JobSession(BaseSession):
         try:
             jobs = sorted(
                 data['jobs'],
-                key=lambda job: job['jobSummary']['subclient']['subclientName'],
-                reverse=True
-            )[:last]
+                key=lambda job: job['jobSummary']['subclient']['subclientName']
+            )
         except KeyError:
             jobs = sorted(
                 data['JobManager_JobListResponse']['jobs'],
-                key=lambda job: job['jobSummary']['subclient']['@subclientName'],
-                reverse=True
-            )[:last]
+                key=lambda job: job['jobSummary']['subclient']['@subclientName']
+            )
+        if last:
+            jobs = jobs[-last:]
         return jobs
 
     @staticmethod
@@ -79,16 +79,14 @@ class JobSession(BaseSession):
                 jobs = sorted(
                     [job for job in jobs
                      if str(job['jobSummary']['subclient']['subclientId']) == subclient_id],
-                    key=lambda job: job['jobSummary']['jobStartTime'],
-                    reverse=True
-                )[:last]
+                    key=lambda job: job['jobSummary']['jobStartTime']
+                )
             except KeyError:
                 jobs = sorted(
                     [job for job in jobs
                      if str(job['jobSummary']['subclient']['@subclientId']) == subclient_id],
-                    key=lambda job: job['jobSummary']['@jobStartTime'],
-                    reverse=True
-                )[:last]
+                    key=lambda job: job['jobSummary']['@jobStartTime']
+                )
         else:
             # Could return incorrect data. If the name passed to this method
             # has more than one partial match and the correct record is not
@@ -97,20 +95,20 @@ class JobSession(BaseSession):
                 jobs = sorted(
                     [job for job in jobs
                      if subclient_name in job['jobSummary']['subclient']['subclientName']],
-                    key=lambda job: job['jobSummary']['jobStartTime'],
-                    reverse=True
-                )[:last]
+                    key=lambda job: job['jobSummary']['jobStartTime']
+                )
             except KeyError:
                 jobs = sorted(
                     [job for job in jobs
                      if subclient_name in job['jobSummary']['subclient']['@subclientName']],
-                    key=lambda job: job['jobSummary']['@jobStartTime'],
-                    reverse=True
-                )[:last]
+                    key=lambda job: job['jobSummary']['@jobStartTime']
+                )
         if not jobs:
             msg = ('No subclient jobs found for subclient_id {} / subclient_name {}'
                    .format(subclient_id, subclient_name))
             raise_requests_error(404, msg)
+        if last:
+            jobs = jobs[-last:]
         return jobs
 
     def get_job_details(self, job_id):
