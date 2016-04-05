@@ -16,19 +16,26 @@ install_requires = [
     'xmltodict>=0.9.2',
 ]
 
+tests_require = [
+    'pytest',
+    'requests-mock==0.7.0'
+]
+
 setup(
     name='pinkopy',
-    version='2.0.4',
+    version='2.0.5',
     description='Python wrapper for Commvault api',
     long_description=readme,
     author='Herkermer Sherwood',
     author_email='theherk@gmail.com',
     url='https://github.com/theherk/pinkopy',
-    download_url='https://github.com/theherk/pinkopy/archive/2.0.4.zip',
+    download_url='https://github.com/theherk/pinkopy/archive/2.0.5.zip',
     packages=find_packages(),
     platforms=['all'],
     license='MIT',
     install_requires=install_requires,
+    setup_requires=['pytest-runner'],
+    tests_require=tests_require,
     classifiers=[
         'Development Status :: 4 - Beta',
         'License :: Other/Proprietary License',
