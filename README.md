@@ -1,11 +1,10 @@
 pinkopy
 =======
 
-[![Join the chat at https://gitter.im/theherk/pinkopy](https://badges.gitter.im/theherk/pinkopy.svg)](https://gitter.im/theherk/pinkopy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 [![Build Status](https://travis-ci.org/theherk/pinkopy.svg)](https://travis-ci.org/theherk/pinkopy)
 [![PyPI Version](https://img.shields.io/pypi/v/pinkopy.svg)](https://pypi.python.org/pypi/pinkopy)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/pinkopy.svg)](https://pypi.python.org/pypi/pinkopy)
+[![Join the chat at https://gitter.im/theherk/pinkopy](https://badges.gitter.im/theherk/pinkopy.svg)](https://gitter.im/theherk/pinkopy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 pinkopy is a Python wrapper for the Commvault api. Support for Commvault v11 api was added in v2.0.0.
 
