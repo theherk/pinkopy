@@ -107,5 +107,3 @@ Please do contribute to this repository. It currently only supports a small set 
 #### Name
 
 The name was originally going to be commpy, but then I liked commiepy. From here it was only a small leap to pinkopy, a tribute to a dear friend of mine.
-
-<img src="http://i.imgur.com/gAs94pn.png" alt="Pinkie Pie" width="200">
