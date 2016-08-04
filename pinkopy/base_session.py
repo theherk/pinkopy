@@ -173,38 +173,17 @@ class BaseSession(object):
         """
         path = 'Login'
         payload = {
-            'DM2ContentIndexing_CheckCredentialReq': {
-                '@mode': 'Webconsole',
-                '@username': self.user,
-                '@password': b64encode(self.pw.encode('UTF-8')).decode('UTF-8')
-            }
-        }
+            'mode': 4,
+            'username': self.user,
+            'password': b64encode(self.pw.encode('UTF-8')).decode('UTF-8')}
         res = self.request('POST', path, payload=payload)
         data = res.json()
-        try:
-            if data['DM2ContentIndexing_CheckCredentialResp'] is not None:
-                self.headers['Authtoken'] = data['DM2ContentIndexing_CheckCredentialResp']['@token']
-                return self.headers['Authtoken']
-            else:
-                msg = 'Commvault user or pass incorrect'
-                raise_requests_error(401, msg)
-        except KeyError:
-            log.info('Commvault login with json is broken. Trying with xml.')
-            headers = {
-                'Accept': 'application/xml',
-                'Content-type': 'application/xml'
-            }
-            payload_nondict = ('<DM2ContentIndexing_CheckCredentialReq mode="Webconsole" '
-                               'username="{}" password="{}" />'
-                               .format(self.user, b64encode(self.pw.encode('UTF-8')).decode('UTF-8')))
-            res = self.request('POST', path, headers=headers, payload_nondict=payload_nondict)
-            data = xmltodict.parse(res.text)
-            try:
-                self.headers['Authtoken'] = data['DM2ContentIndexing_CheckCredentialResp']['@token']
-                return self.headers['Authtoken']
-            except KeyError:
-                msg = 'Commvault user or pass incorrect'
-                raise_requests_error(401, msg)
+        if data['token']:
+            self.headers['Authtoken'] = data['token']
+            return self.headers['Authtoken']
+        else:
+            msg = 'Commvault user or pass incorrect'
+            raise_requests_error(401, msg)
 
     def logout(self):
         """End session."""
