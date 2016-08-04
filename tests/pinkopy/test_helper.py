@@ -15,9 +15,7 @@ def mock_session(base_session, service=None, user=None, pw=None, token=None,
         }
     }
     post_response = {
-        'DM2ContentIndexing_CheckCredentialResp': {
-            '@token': token
-        }
+        'token': token
     }
     headers = {
         'Accept': content_type,
