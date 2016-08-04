@@ -178,7 +178,7 @@ class BaseSession(object):
             'password': b64encode(self.pw.encode('UTF-8')).decode('UTF-8')}
         res = self.request('POST', path, payload=payload)
         data = res.json()
-        if data['token']:
+        if 'token' in data and data['token']:
             self.headers['Authtoken'] = data['token']
             return self.headers['Authtoken']
         else:
