@@ -17,10 +17,7 @@ class CommvaultSession(BaseSession):
     """
     def __init__(self, *args, **kwargs):
         """Initialize route classes and shim."""
-        try:
-            super().__init__(*args, **kwargs)
-        except TypeError:
-            super(CommvaultSession, self).__init__(*args, **kwargs)
+        super(CommvaultSession, self).__init__(*args, **kwargs)
 
         self.clients = ClientSession(token=self.headers['Authtoken'], *args, **kwargs)
         self.subclients = SubclientSession(token=self.headers['Authtoken'], *args, **kwargs)

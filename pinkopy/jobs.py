@@ -11,10 +11,7 @@ class JobSession(BaseSession):
     def __init__(self, cache_methods=None, *args, **kwargs):
         cache_methods = cache_methods or ['get_job_details',
                                           'get_jobs']
-        try:
-            super().__init__(cache_methods=cache_methods, *args, **kwargs)
-        except:
-            super(JobSession, self).__init__(cache_methods=cache_methods, *args, **kwargs)
+        super(JobSession, self).__init__(cache_methods=cache_methods, *args, **kwargs)
 
     def get_jobs(self, client_id, job_filter=None, last=None):
         """Get jobs.
