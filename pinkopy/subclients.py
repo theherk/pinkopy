@@ -10,7 +10,7 @@ class SubclientSession(BaseSession):
     """Methods for subclients."""
     def __init__(self, cache_methods=None, *args, **kwargs):
         cache_methods = cache_methods or ['get_subclients']
-        super().__init__(cache_methods=cache_methods, *args, **kwargs)
+        super(SubclientSession, self).__init__(cache_methods=cache_methods, *args, **kwargs)
 
     def get_subclients(self, client_id):
         """Get subclients.

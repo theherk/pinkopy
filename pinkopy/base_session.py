@@ -2,7 +2,11 @@ from base64 import b64encode
 import inspect
 import logging
 import time
-from urllib.parse import urlencode, urljoin
+try:
+    from urllib.parse import urlencode, urljoin
+except ImportError:
+    from urllib import urlencode
+    from urlparse import urljoin
 import xmltodict
 
 from cachetools.func import ttl_cache
