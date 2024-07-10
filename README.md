@@ -32,14 +32,25 @@ config = {
     'pw': 'password'
 }
 
-with CommvaultSession(**config) as commvault:
-    client_jobs = commvault.jobs.get_jobs('1234', job_filter="Backup")
-    cust_jobs = commvault.jobs.get_subclient_jobs(client_jobs, '12345678', last=3)
-    # multi status
-    for job in cust_jobs:
-        job_id = job['jobSummary']['jobId']
-        job_details = commvault.jobs.get_job_details('1234', job_id)
-        job_vmstatus = commvault.jobs.get_job_vmstatus(job_details)
+try:
+    with CommvaultSession(**config) as commvault:
+        
+        client_id = '1234'
+        backup_jobs = commvault.jobs.get_jobs(client_id, job_filter="Backup")
+        
+        subclient_id = '12345678'
+        recent_subclient_jobs = commvault.jobs.get_subclient_jobs(backup_jobs, subclient_id, last=3)
+        
+        for job in recent_subclient_jobs:
+            job_id = job['jobSummary']['jobId']
+            job_details = commvault.jobs.get_job_details(client_id, job_id)
+            job_vmstatus = commvault.jobs.get_job_vmstatus(job_details)
+            
+            print(f"Job ID: {job_id}, VM Status: {job_vmstatus}")
+
+except Exception as e:
+    print(f"An error occurred: {e}")
+
 ```
 
 pinkopy doesn't have to be used as a context manager.
